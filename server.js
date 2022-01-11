@@ -14,6 +14,10 @@ app.get('/', (req, res) => {
     res.send('Todo API Root!');
 });
 
+app.get('/todos', (req, res) => {
+    res.json(todos);
+});
+
 //filtering data by query parameters
 
 app.get('/todos', (req, res) => {
@@ -21,11 +25,17 @@ app.get('/todos', (req, res) => {
     let filterData = todos;
 
     if (query.hasOwnProperty('completed') && query.completed === 'true') {
-        filterData = _.where(filterData,{completed : true});
+        filterData = _.where(filterData, { completed: true });
     } else if (query.hasOwnProperty('completed') && query.completed === 'false') {
-        filterData = _.where(filterData,{completed : false});
+        filterData = _.where(filterData, { completed: false });
     }
-    
+
+    if (query.hasOwnProperty('q') && query.q.length > 0) {
+        filterData = _.filter(filterData, function (todo) {
+            return todo.description.toLowerCase().indexOf(query.q.toLowerCase()) > -1;
+        });
+    }
+
     res.json(filterData);
 });
 
@@ -86,7 +96,7 @@ app.delete('/todos/:id', (req, res) => {
 
 app.put('/todos/:id', (req, res) => {
     let todoID = parseInt(req.params.id);
-    let matchedData = _.findWhere(todos,{id : todoID});
+    let matchedData = _.findWhere(todos, { id: todoID });
     let body = _.pick(req.body, 'description', 'completed');
     let validAttribute = {};
 
@@ -106,7 +116,7 @@ app.put('/todos/:id', (req, res) => {
         return res.status(400).send();
     }
 
-    res.json(_.extend(matchedData,validAttribute));
+    res.json(_.extend(matchedData, validAttribute));
 });
 
 app.listen(PORT, (req, res) => {
