@@ -14,9 +14,9 @@ app.get('/', (req, res) => {
     res.send('Todo API Root!');
 });
 
-app.get('/todos', (req, res) => {
-    res.json(todos);
-});
+// app.get('/todos', (req, res) => {
+//     res.json(todos);
+// });
 
 //filtering data by query parameters
 
