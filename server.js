@@ -14,8 +14,19 @@ app.get('/', (req, res) => {
     res.send('Todo API Root!');
 });
 
+//filtering data by query parameters
+
 app.get('/todos', (req, res) => {
-    res.json(todos);
+    let query = req.query;
+    let filterData = todos;
+
+    if (query.hasOwnProperty('completed') && query.completed === 'true') {
+        filterData = _.where(filterData,{completed : true});
+    } else if (query.hasOwnProperty('completed') && query.completed === 'false') {
+        filterData = _.where(filterData,{completed : false});
+    }
+    
+    res.json(filterData);
 });
 
 app.get('/todos/:id', (req, res) => {
