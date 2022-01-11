@@ -19,7 +19,7 @@ app.get('/todos', (req, res) => {
 });
 
 app.get('/todos/:id', (req, res) => {
-    let todoID = parseInt(req.params.id,10);
+    let todoID = parseInt(req.params.id, 10);
     // let matched = false;
 
     // todos.forEach((element) => {
@@ -29,8 +29,8 @@ app.get('/todos/:id', (req, res) => {
     //     }
     // })
 
-    let matchedData = _.findWhere(todos,{id:todoID});
-    
+    let matchedData = _.findWhere(todos, { id: todoID });
+
     if (matchedData === undefined) {
         res.status(404).send();
     } else {
@@ -41,34 +41,61 @@ app.get('/todos/:id', (req, res) => {
 //Here we are adding todo task dynamically
 //Post contains data so we can pass todo data to it. It contains JSON data and server takes this data
 // and stores in array
-app.post('/todos', (req,res) => {
+app.post('/todos', (req, res) => {
     let body = req.body;
-    
-    if(!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+
+    if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
         return res.status(400).send();
     }
 
     body.id = todoNextID++;
     body.description = body.description.trim();
 
-    todos.push(_.pick(body,'id','description','completed'));
+    todos.push(_.pick(body, 'id', 'description', 'completed'));
 
     res.json(body);
 });
 
 //Here we are deleting perticular task using id
 
-app.delete('/todos/:id', (req,res) => {
-    let todoID = parseInt(req.params.id,10);
-    let matchedData = _.findWhere(todos,{id:todoID});
+app.delete('/todos/:id', (req, res) => {
+    let todoID = parseInt(req.params.id, 10);
+    let matchedData = _.findWhere(todos, { id: todoID });
 
-    if(!matchedData) {
+    if (!matchedData) {
         return res.status(400).send('Error! No data found with this id ..... ');
     }
 
-    todos = _.without(todos,matchedData);
+    todos = _.without(todos, matchedData);
 
     res.json(todos);
+});
+
+//Here we are updating particular task by id
+
+app.put('/todos/:id', (req, res) => {
+    let todoID = parseInt(req.params.id);
+    let matchedData = _.findWhere(todos,{id : todoID});
+    let body = _.pick(req.body, 'description', 'completed');
+    let validAttribute = {};
+
+    if (!matchedData) {
+        return res.status(404).send();
+    }
+
+    if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
+        validAttribute.completed = body.completed;
+    } else if (body.hasOwnProperty('completed')) {
+        return res.status(400).send();
+    }
+
+    if (body.hasOwnProperty('description') && _.isString(body.description) && body.description.trim().length > 0) {
+        validAttribute.description = body.description;
+    } else if (body.hasOwnProperty('description')) {
+        return res.status(400).send();
+    }
+
+    res.json(_.extend(matchedData,validAttribute));
 });
 
 app.listen(PORT, (req, res) => {
