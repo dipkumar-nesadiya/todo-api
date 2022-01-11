@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 let todoNextID = 1;
 
-const todos = [];
+let todos = [];
 
 app.use(bodyParser.json());
 
@@ -54,6 +54,21 @@ app.post('/todos', (req,res) => {
     todos.push(_.pick(body,'id','description','completed'));
 
     res.json(body);
+});
+
+//Here we are deleting perticular task using id
+
+app.delete('/todos/:id', (req,res) => {
+    let todoID = parseInt(req.params.id,10);
+    let matchedData = _.findWhere(todos,{id:todoID});
+
+    if(!matchedData) {
+        return res.status(400).send('Error! No data found with this id ..... ');
+    }
+
+    todos = _.without(todos,matchedData);
+
+    res.json(todos);
 });
 
 app.listen(PORT, (req, res) => {
