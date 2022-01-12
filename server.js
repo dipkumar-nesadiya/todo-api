@@ -38,7 +38,7 @@ app.get('/todos', (req, res) => {
     }
 
     db.todo.findAll({
-        where: where
+        where: where//, offset:2 , limit : 2
     })
         .then((todo) => res.json(todo))
         .catch((err) => res.status(404).send(err));
@@ -106,13 +106,8 @@ app.delete('/todos/:id', (req, res) => {
 
 app.put('/todos/:id', (req, res) => {
     let todoID = parseInt(req.params.id);
-    let matchedData = _.findWhere(todos, { id: todoID });
     let body = _.pick(req.body, 'description', 'completed');
     let validAttribute = {};
-
-    if (!matchedData) {
-        return res.status(404).send();
-    }
 
     if (body.hasOwnProperty('completed') && _.isBoolean(body.completed)) {
         validAttribute.completed = body.completed;
@@ -126,7 +121,19 @@ app.put('/todos/:id', (req, res) => {
         return res.status(400).send();
     }
 
-    res.json(_.extend(matchedData, validAttribute));
+    db.todo.update(validAttribute,{
+        where : {id : todoID}
+    })
+        .then((todo) => {
+            if (todo === 1) {
+                res.status(200).json(todo);
+            } else {
+                res.status(404).send('No Data found for updation !!!');
+            }
+        })
+        .catch((err) => {
+            res.status(500).json(err);
+        })
 });
 
 db.sequelize.sync().then(() => {
