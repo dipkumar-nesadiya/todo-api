@@ -1,7 +1,6 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('underscore');
-const db = require('./db.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -64,15 +63,18 @@ app.get('/todos/:id', (req, res) => {
 //Post contains data so we can pass todo data to it. It contains JSON data and server takes this data
 // and stores in array
 app.post('/todos', (req, res) => {
-    let body = _.pick(req.body, 'description', 'completed');
+    let body = req.body;
 
-    db.todo.create(body)
-    .then((todo) => {
-        res.status(200).json(todo);
-    })
-    .catch((err) => {
-        res.status(400).json(err);
-    })
+    if (!_.isBoolean(body.completed) || !_.isString(body.description) || body.description.trim().length === 0) {
+        return res.status(400).send();
+    }
+
+    body.id = todoNextID++;
+    body.description = body.description.trim();
+
+    todos.push(_.pick(body, 'id', 'description', 'completed'));
+
+    res.json(body);
 });
 
 //Here we are deleting perticular task using id
@@ -117,8 +119,6 @@ app.put('/todos/:id', (req, res) => {
     res.json(_.extend(matchedData, validAttribute));
 });
 
-db.sequelize.sync().then(() => {
-    app.listen(PORT, (req, res) => {
-        console.log(`Express listening on PORT ${PORT}`);
-    });
+app.listen(PORT, (req, res) => {
+    console.log(`Express listening on PORT ${PORT}`);
 })
