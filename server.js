@@ -21,8 +21,6 @@ app.get('/', (req, res) => {
 //     res.json(todos);
 // });
 
-//filtering data by query parameters
-
 app.get('/todos', (req, res) => {
     let query = req.query;
     let where = {};
@@ -32,39 +30,38 @@ app.get('/todos', (req, res) => {
     } else if (query.hasOwnProperty('completed') && query.completed === 'false') {
         where.completed = false;
     }
-    
+
     if (query.hasOwnProperty('q') && query.q.length > 0) {
         where.description = {
-            $like : '%' + query.q + '%'
+            $like: '%' + query.q + '%'
         };
     }
-    
+
     db.todo.findAll({
-        where : where
+        where: where
     })
-    .then((todo) => res.json(todo))
-    .catch((err) => res.status(404).send(err));
+        .then((todo) => res.json(todo))
+        .catch((err) => res.status(404).send(err));
 });
 
 app.get('/todos/:id', (req, res) => {
     let todoID = parseInt(req.params.id, 10);
-
 
     db.todo.findAll({
         where: {
             id: todoID
         }
     })
-    .then((todo) => {
-        if (todo) {
-            res.json(todo)
-        } else {
-            res.status(404).send();
-        }
-    })
-    .catch((err) => {
-        res.status(500).send();
-    });
+        .then((todo) => {
+            if (todo) {
+                res.json(todo)
+            } else {
+                res.status(404).send();
+            }
+        })
+        .catch((err) => {
+            res.status(500).json(err);
+        });
 });
 
 //Here we are adding todo task dynamically
@@ -86,15 +83,23 @@ app.post('/todos', (req, res) => {
 
 app.delete('/todos/:id', (req, res) => {
     let todoID = parseInt(req.params.id, 10);
-    let matchedData = _.findWhere(todos, { id: todoID });
 
-    if (!matchedData) {
-        return res.status(400).send('Error! No data found with this id ..... ');
-    }
-
-    todos = _.without(todos, matchedData);
-
-    res.json(todos);
+    db.todo.destroy({
+        where: {
+            id: todoID
+        }
+    })
+        .then((rowDeleted) => {
+            if (rowDeleted === 0) {
+                res.status(404).send();
+                //return res.status(400).send('Error! No data found with this id ..... ');
+            } else {
+                res.json(todo)
+            }
+        })
+        .catch((err) => {
+            res.status(500).json(err);
+        })
 });
 
 //Here we are updating particular task by id
