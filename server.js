@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const _ = require('underscore');
 const db = require('./db.js');
+const { todo } = require('./db.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -42,22 +43,26 @@ app.get('/todos', (req, res) => {
 
 app.get('/todos/:id', (req, res) => {
     let todoID = parseInt(req.params.id, 10);
-    // let matched = false;
 
-    // todos.forEach((element) => {
-    //     if (element.id === todoID) {
-    //         matched = true;
-    //         res.json(element);
-    //     }
-    // })
+    db.todo.findAll({
+        where: {
+            id: todoID
+        }
+    })
+        .then((todo) => {
+            res.json(todo)
+        })
+        .catch((err) => {
+            res.status(400).send();
+        })
 
-    let matchedData = _.findWhere(todos, { id: todoID });
+    // let matchedData = _.findWhere(todos, { id: todoID });
 
-    if (matchedData === undefined) {
-        res.status(404).send();
-    } else {
-        res.json(matchedData);
-    }
+    // if (matchedData === undefined) {
+    //     res.status(404).send();
+    // } else {
+    //     res.json(matchedData);
+    // }
 });
 
 //Here we are adding todo task dynamically
@@ -67,12 +72,12 @@ app.post('/todos', (req, res) => {
     let body = _.pick(req.body, 'description', 'completed');
 
     db.todo.create(body)
-    .then((todo) => {
-        res.status(200).json(todo);
-    })
-    .catch((err) => {
-        res.status(400).json(err);
-    })
+        .then((todo) => {
+            res.status(200).json(todo);
+        })
+        .catch((err) => {
+            res.status(400).json(err);
+        })
 });
 
 //Here we are deleting perticular task using id
