@@ -38,7 +38,7 @@ app.get('/todos', (req, res) => {
     }
 
     db.todo.findAll({
-        where: where//, offset:2 , limit : 2
+        where: where, limit: 2
     })
         .then((todo) => res.json(todo))
         .catch((err) => res.status(404).send(err));
@@ -77,6 +77,18 @@ app.post('/todos', (req, res) => {
         .catch((err) => {
             res.status(400).json(err);
         })
+});
+
+app.post('/users', (req, res) => {
+    let body = _.pick(req.body, 'email', 'password');
+
+    db.user.create(body)
+        .then((user) => {
+            res.status(200).json(user);
+        })
+        .catch((err) => {
+            res.status(400).json(err);
+        });
 });
 
 //Here we are deleting perticular task using id
@@ -121,8 +133,8 @@ app.put('/todos/:id', (req, res) => {
         return res.status(400).send();
     }
 
-    db.todo.update(validAttribute,{
-        where : {id : todoID}
+    db.todo.update(validAttribute, {
+        where: { id: todoID }
     })
         .then((todo) => {
             if (todo === 1) {
