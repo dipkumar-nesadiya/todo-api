@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const _ = require('underscore');
 const db = require('./db.js');
 const { todo } = require('./db.js');
+const { filter } = require('underscore');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -24,45 +25,46 @@ app.get('/', (req, res) => {
 
 app.get('/todos', (req, res) => {
     let query = req.query;
-    let filterData = todos;
+    let where = {};
 
     if (query.hasOwnProperty('completed') && query.completed === 'true') {
-        filterData = _.where(filterData, { completed: true });
+        where.completed = true;
     } else if (query.hasOwnProperty('completed') && query.completed === 'false') {
-        filterData = _.where(filterData, { completed: false });
+        where.completed = false;
     }
-
+    
     if (query.hasOwnProperty('q') && query.q.length > 0) {
-        filterData = _.filter(filterData, function (todo) {
-            return todo.description.toLowerCase().indexOf(query.q.toLowerCase()) > -1;
-        });
+        where.description = {
+            $like : '%' + query.q + '%'
+        };
     }
-
-    res.json(filterData);
+    
+    db.todo.findAll({
+        where : where
+    })
+    .then((todo) => res.json(todo))
+    .catch((err) => res.status(404).send(err));
 });
 
 app.get('/todos/:id', (req, res) => {
     let todoID = parseInt(req.params.id, 10);
+
 
     db.todo.findAll({
         where: {
             id: todoID
         }
     })
-        .then((todo) => {
+    .then((todo) => {
+        if (todo) {
             res.json(todo)
-        })
-        .catch((err) => {
-            res.status(400).send();
-        })
-
-    // let matchedData = _.findWhere(todos, { id: todoID });
-
-    // if (matchedData === undefined) {
-    //     res.status(404).send();
-    // } else {
-    //     res.json(matchedData);
-    // }
+        } else {
+            res.status(404).send();
+        }
+    })
+    .catch((err) => {
+        res.status(500).send();
+    });
 });
 
 //Here we are adding todo task dynamically
