@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const _ = require('underscore');
 const db = require('./db.js');
 const { todo } = require('./db.js');
-const { filter } = require('underscore');
+const bcrypt = require('bcrypt');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -91,6 +91,18 @@ app.post('/users', (req, res) => {
         });
 });
 
+app.post('/users/login', (req, res) => {
+    let body = _.pick(req.body, 'email', 'password');
+
+    db.user.authenticate(body)
+        .then((user) => {
+            res.status(200).json(user.toPublicJSON());
+        })
+        .catch((err) => {
+            res.status(401).send(err);
+        })
+});
+
 //Here we are deleting perticular task using id
 
 app.delete('/todos/:id', (req, res) => {
@@ -148,7 +160,7 @@ app.put('/todos/:id', (req, res) => {
         })
 });
 
-db.sequelize.sync().then(() => {
+db.sequelize.sync({force : true}).then(() => {
     app.listen(PORT, (req, res) => {
         console.log(`Express listening on PORT ${PORT}`);
     });
