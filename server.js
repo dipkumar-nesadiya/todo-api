@@ -4,10 +4,11 @@ const _ = require('underscore');
 const db = require('./db.js');
 const { todo } = require('./db.js');
 const bcrypt = require('bcrypt');
+const middleware = require('./middleware.js');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-let todoNextID = 1;
+//let todoNextID = 1;
 
 let todos = [];
 
@@ -21,7 +22,7 @@ app.get('/', (req, res) => {
 //     res.json(todos);
 // });
 
-app.get('/todos', (req, res) => {
+app.get('/todos', middleware.requiredAuthentication, (req, res) => {
     let query = req.query;
     let where = {};
 
@@ -44,7 +45,7 @@ app.get('/todos', (req, res) => {
         .catch((err) => res.status(404).send(err));
 });
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', middleware.requiredAuthentication, (req, res) => {
     let todoID = parseInt(req.params.id, 10);
 
     db.todo.findAll({
@@ -67,7 +68,7 @@ app.get('/todos/:id', (req, res) => {
 //Here we are adding todo task dynamically
 //Post contains data so we can pass todo data to it. It contains JSON data and server takes this data
 // and stores in array
-app.post('/todos', (req, res) => {
+app.post('/todos', middleware.requiredAuthentication, (req, res) => {
     let body = _.pick(req.body, 'description', 'completed');
 
     db.todo.create(body)
@@ -97,7 +98,7 @@ app.post('/users/login', (req, res) => {
     db.user.authenticate(body)
         .then((user) => {
             let token = user.generateToken('authentication');
-            res.header('Auth',token).json(user.toPublicJSON());
+            res.header('Auth', token).json(user.toPublicJSON());
         })
         .catch((err) => {
             res.status(401).send(err);
@@ -106,7 +107,7 @@ app.post('/users/login', (req, res) => {
 
 //Here we are deleting perticular task using id
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', middleware.requiredAuthentication, (req, res) => {
     let todoID = parseInt(req.params.id, 10);
 
     db.todo.destroy({
@@ -129,7 +130,7 @@ app.delete('/todos/:id', (req, res) => {
 
 //Here we are updating particular task by id
 
-app.put('/todos/:id', (req, res) => {
+app.put('/todos/:id', middleware.requiredAuthentication, (req, res) => {
     let todoID = parseInt(req.params.id);
     let body = _.pick(req.body, 'description', 'completed');
     let validAttribute = {};
