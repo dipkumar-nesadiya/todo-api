@@ -96,7 +96,8 @@ app.post('/users/login', (req, res) => {
 
     db.user.authenticate(body)
         .then((user) => {
-            res.status(200).json(user.toPublicJSON());
+            let token = user.generateToken('authentication');
+            res.header('Auth',token).json(user.toPublicJSON());
         })
         .catch((err) => {
             res.status(401).send(err);
@@ -160,7 +161,7 @@ app.put('/todos/:id', (req, res) => {
         })
 });
 
-db.sequelize.sync({force : true}).then(() => {
+db.sequelize.sync().then(() => {
     app.listen(PORT, (req, res) => {
         console.log(`Express listening on PORT ${PORT}`);
     });
